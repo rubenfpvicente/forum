@@ -30,7 +30,7 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 #[AsCommand(
     name: "app:user:register",
     description: "Registers a new user on the database.",
-    aliases: ["app:user:add"]
+    aliases: ["useradd", "usradd"]
 )]
 final class RegisterUser extends Command
 {

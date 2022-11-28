@@ -17,8 +17,125 @@ services:
         resource: '../src/'
         exclude:
             - '../src/DependencyInjection/'
-            - '../src/Entity/'
             - '../src/Kernel.php'
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
+
+    #Kernel listeners
+    App\Infrastructure\HttpKernel\KernelControllerListener:
+        tags:
+            - { name: kernel.event_listener, event: kernel.controller, priority: 10 }
+
+    App\Application\OAuth\ClientListQuery:
+        class: App\Infrastructure\Persistence\Doctrine\OAuth\DoctrineClientListQuery
+    App\Application\UserManagement\UserListQuery:
+        class: App\Infrastructure\Persistence\Doctrine\UserManagement\DoctrineUserListQuery
+
+    # JSON API services.
+    json-api.document.converter:
+        class: Slick\JSONAPI\Document\Converter\PHPJson
+    Slick\JSONAPI\Document\Converter\PHPJson: '@json-api.document.converter'
+
+    json-api.schema.validator:
+        class: Slick\JSONAPI\Validator\SchemaValidator
+    Slick\JSONAPI\Validator\SchemaValidator: '@json-api.schema.validator'
+
+    json-api.document.factory:
+        class: Slick\JSONAPI\Document\Factory\DefaultFactory
+    Slick\JSONAPI\Document\DocumentFactory: '@json-api.document.factory'
+
+    json-api.version:
+        class: Slick\JSONAPI\JsonApi
+        arguments:
+            - 1.1
+
+    json-api.schema.discover:
+        class: App\Infrastructure\JsonApi\JsonApiSchemaDiscover
+    Slick\JSONAPI\Object\SchemaDiscover: '@json-api.schema.discover'
+
+    json-api.document.encoder:
+        class: Slick\JSONAPI\Document\Encoder\DefaultEncoder
+        arguments:
+            - '@json-api.schema.discover'
+            - '@json-api.document.factory'
+            - '@json-api.document.converter'
+        calls:
+            - method: withJsonapi
+              arguments:
+                  - '@json-api.version'
+            - method: withLinkPrefix
+              arguments:
+                  - 'http://192.168.56.118'
+    Slick\JSONAPI\Document\DocumentEncoder: '@json-api.document.encoder'
+
+
+    # OAuth2.0 Server
+    users.repository:
+        alias: App\Infrastructure\Persistence\Doctrine\UserManagement\DoctrineUserRepository
+
+    clients.repository:
+        alias: App\Infrastructure\Persistence\Doctrine\OAuth\DoctrineClientRepository
+
+    scopes.repository:
+        alias: App\Infrastructure\Persistence\Doctrine\OAuth\DoctrineScopeRepository
+
+    access.tokens.repository:
+        alias: App\Infrastructure\Persistence\Doctrine\OAuth\DoctrineAccessTokenRepository
+
+    refresh.tokens.repository:
+        alias: App\Infrastructure\Persistence\Doctrine\OAuth\DoctrineRefreshTokenRepository
+
+    oauth2.password.grant:
+        class: League\OAuth2\Server\Grant\PasswordGrant
+        arguments:
+            - '@users.repository'
+            - '@refresh.tokens.repository'
+        calls:
+            - method: setRefreshTokenTTL
+              arguments:
+                  - '@refresh.token.ttl'
+
+    oauth2.refresh.token.grant:
+        class: League\OAuth2\Server\Grant\RefreshTokenGrant
+        arguments:
+            - '@refresh.tokens.repository'
+        calls:
+            - method: setRefreshTokenTTL
+              arguments:
+                  - '@refresh.token.ttl'
+
+    refresh.token.ttl:
+        class: DateInterval
+        arguments:
+            - 'P1M'
+    access.token.ttl:
+        class: DateInterval
+        arguments:
+            - 'PT1H'
+
+    League\OAuth2\Server\AuthorizationServer:
+        class: League\OAuth2\Server\AuthorizationServer
+        tags: [ 'league.authorization.server', 'authorization.server' ]
+        arguments:
+            $clientRepository: '@clients.repository'
+            $accessTokenRepository: '@access.tokens.repository'
+            $scopeRepository: '@scopes.repository'
+            $privateKey: '%kernel.project_dir%/%env(OAUTH_PRIVATE_KEY)%'
+            $encryptionKey: '%env(OAUTH_ENC_KEY)%'
+        calls:
+            - method: enableGrantType
+              arguments:
+                  - '@oauth2.password.grant'
+                  - '@access.token.ttl'
+            - method: enableGrantType
+              arguments:
+                  - '@oauth2.refresh.token.grant'
+                  - '@access.token.ttl'
+
+    League\OAuth2\Server\ResourceServer:
+        class: League\OAuth2\Server\ResourceServer
+        tags: [ 'league.resource.server', 'resource.server' ]
+        arguments:
+            $accessTokenRepository: '@access.tokens.repository'
+            $publicKey: '%kernel.project_dir%/%env(OAUTH_PUBLIC_KEY)%'

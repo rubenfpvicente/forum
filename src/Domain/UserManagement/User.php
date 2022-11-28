@@ -8,22 +8,51 @@ use App\Domain\UserManagement\Events\UserWasRegistered;
 use App\Domain\UserManagement\User\Email;
 use App\Domain\UserManagement\User\Password;
 use App\Domain\UserManagement\User\UserId;
+use App\Infrastructure\JsonApi\SchemaDiscovery\AsResourceObject;
+use App\Infrastructure\JsonApi\SchemaDiscovery\Attribute;
+use App\Infrastructure\JsonApi\SchemaDiscovery\ResourceIdentifier;
 use Doctrine\ORM\Mapping\Column;
 use Doctrine\ORM\Mapping\Entity;
 use Doctrine\ORM\Mapping\GeneratedValue;
 use Doctrine\ORM\Mapping\Id;
 use Doctrine\ORM\Mapping\Index;
 use Doctrine\ORM\Mapping\Table;
+use League\OAuth2\Server\Entities\UserEntityInterface;
+use OpenApi\Attributes as OA;
 
 /**
  * User
  *
  * @package App\Domain\UserManagement
  */
-#[Entity]
-#[Table(name: "users")]
-#[Index(fields: ["email"], name: "emailIdx")]
-class User implements RootAggregate
+#[
+    OA\Schema(
+        schema: "UserDocument",
+        title: "User Document",
+        description: "An application user",
+        properties: [
+            new OA\Property(property: "jsonapi", ref: "#/components/schemas/jsonApiVersion"),
+            new OA\Property(property: "data", properties: [
+                new OA\Property(property: "type", type: "string", example: "users"),
+                new OA\Property(property: "id", type: "string", example: "a697edde-a551-407b-9a1b-9e8f107fbd41"),
+                new OA\Property(property: "attributes", properties: [
+                    new OA\Property(property: "name", type: "string", example: "John Doe"),
+                    new OA\Property(property: "email", type: "string", example: "john.doe@example.com"),
+                ], type: "object"),
+                new OA\Property(property: "links", properties: [
+                    new OA\Property(property: "self", type: "string", example: "/users/a697edde-a551-407b-9a1b-9e8f107fbd41"),
+                ], type: "object"),
+            ], type: "object"),
+        ]
+    )
+]
+#[
+    Entity,
+    Table(name: "users"),
+    Index(fields: ["email"], name: "emailIdx")
+]
+#[AsResourceObject(type: "users", links: [AsResourceObject::LINK_SELF])]
+class User implements RootAggregate, UserEntityInterface
 {
 
     use RootAggregateMethods;
@@ -31,6 +60,7 @@ class User implements RootAggregate
     #[Id]
     #[GeneratedValue(strategy: 'NONE')]
     #[Column(name: 'id', type: 'UserId')]
+    #[ResourceIdentifier]
     private UserId $userId;
 
     /**
@@ -41,9 +71,9 @@ class User implements RootAggregate
      * @param Password|null $password
      */
     public function __construct(
-        #[Column]
+        #[Column, Attribute]
         private string $name,
-        #[Column(type: 'Email')]
+        #[Column(type: 'Email'), Attribute]
         private Email $email,
         #[Column(type: 'Password')]
         private ?Password $password = null
@@ -96,5 +126,13 @@ class User implements RootAggregate
     public function password(): Password
     {
         return $this->password;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function getIdentifier(): string
+    {
+        return (string) $this->userId;
     }
 }

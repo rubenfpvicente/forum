@@ -4,6 +4,7 @@ namespace App\Application\UserManagement;
 
 use App\Application\Command;
 use App\Application\CommandHandler;
+use App\Application\CommandHandlerMethods;
 use App\Domain\UserManagement\User;
 use App\Domain\UserManagement\UserRepository;
 use Psr\EventDispatcher\EventDispatcherInterface;
@@ -15,6 +16,8 @@ use Psr\EventDispatcher\EventDispatcherInterface;
  */
 class RegisterUserHandler implements CommandHandler
 {
+
+    use CommandHandlerMethods;
 
     /**
      * Creates a RegisterUserHandler
@@ -40,9 +43,7 @@ class RegisterUserHandler implements CommandHandler
         );
 
         $user = $this->users->add($user);
-        foreach ($user->releaseEvents() as $event) {
-            $this->dispatcher->dispatch($event);
-        }
+        $this->dispatchEventsFrom($user, $this->dispatcher);
 
         return $user;
     }

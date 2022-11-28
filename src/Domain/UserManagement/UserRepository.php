@@ -11,12 +11,17 @@ declare(strict_types=1);
 
 namespace App\Domain\UserManagement;
 
+use App\Domain\Exception\EntityNotFound;
+use App\Domain\UserManagement\User\Email;
+use App\Domain\UserManagement\User\UserId;
+use League\OAuth2\Server\Repositories\UserRepositoryInterface;
+
 /**
  * UserRepository
  *
  * @package App\Domain\UserManagement
  */
-interface UserRepository
+interface UserRepository extends UserRepositoryInterface
 {
 
     /**
@@ -26,4 +31,24 @@ interface UserRepository
      * @return User
      */
     public function add(User $user): User;
+
+    /**
+     * Retrieves the user added with provided identifier
+     *
+     * @param UserId $userId
+     * @return User
+     *
+     * @throws \RuntimeException|EntityNotFound
+     */
+    public function withId(UserId $userId): User;
+
+    /**
+     * Retrieves the user added with provided email
+     *
+     * @param Email $email
+     * @return User
+     *
+     * @throws \RuntimeException|EntityNotFound
+     */
+    public function withEmail(Email $email): User;
 }

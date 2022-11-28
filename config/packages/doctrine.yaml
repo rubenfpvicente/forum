@@ -9,6 +9,8 @@ doctrine:
             UserId: App\Infrastructure\Persistence\Doctrine\UserManagement\DoctrineUserId
             Email: App\Infrastructure\Persistence\Doctrine\UserManagement\DoctrineEmail
             Password: App\Infrastructure\Persistence\Doctrine\UserManagement\DoctrinePassword
+            ClientId: App\Infrastructure\Persistence\Doctrine\OAuth\DoctrineClientId
+            ScopeId: App\Infrastructure\Persistence\Doctrine\OAuth\DoctrineScopeId
     orm:
         auto_generate_proxy_classes: true
         naming_strategy: doctrine.orm.naming_strategy.underscore_number_aware
