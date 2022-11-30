@@ -9,8 +9,9 @@
 
 declare(strict_types=1);
 
-namespace App\Infrastructure\JsonApi\SchemaDiscovery;
+namespace App\Infrastructure\JsonApi\SchemaDiscovery\Attributes;
 
+use App\Infrastructure\JsonApi\SchemaDiscovery\Attributes\AsResourceObject;
 use Attribute;
 
 /**

@@ -44,7 +44,7 @@ final class ClassMapSchemaDiscovery implements SchemaDiscover
      */
     public function discover($object): ResourceSchema
     {
-        $key = get_class($object);
+        $key = is_string($object) ? $object : get_class($object);
 
         if (!$this->isConvertible($object)) {
             $suggestion = $this->constructSchemaClassName($object);
@@ -82,7 +82,8 @@ final class ClassMapSchemaDiscovery implements SchemaDiscover
      */
     public function isConvertible($object): bool
     {
-        if (array_key_exists(get_class($object), $this->map)) {
+        $key = is_string($object) ? $object : get_class($object);
+        if (array_key_exists($key, $this->map)) {
             return true;
         }
 
@@ -99,7 +100,8 @@ final class ClassMapSchemaDiscovery implements SchemaDiscover
     {
         $schemaClass = $this->constructSchemaClassName($object);
         if (class_exists($schemaClass)) {
-            $this->map(get_class($object), $schemaClass);
+            $className = is_string($object) ? $object : get_class($object);
+            $this->map($className, $schemaClass);
             return true;
         }
 
@@ -123,6 +125,7 @@ final class ClassMapSchemaDiscovery implements SchemaDiscover
 
         $replace[] = $this->namespacePrefix;
         $needle[] = $this->psr4prefix;
-        return str_replace($needle, $replace, get_class($object)) . 'Schema';
+        $get_class = is_string($object) ? $object : get_class($object);
+        return str_replace($needle, $replace, $get_class) . 'Schema';
     }
 }

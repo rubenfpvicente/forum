@@ -12,9 +12,9 @@ declare(strict_types=1);
 namespace App\Application\OAuth\Model;
 
 use App\Domain\OAuth\Client\ClientId;
-use App\Infrastructure\JsonApi\SchemaDiscovery\AsResourceObject;
-use App\Infrastructure\JsonApi\SchemaDiscovery\Attribute;
-use App\Infrastructure\JsonApi\SchemaDiscovery\ResourceIdentifier;
+use App\Infrastructure\JsonApi\SchemaDiscovery\Attributes\AsResourceObject;
+use App\Infrastructure\JsonApi\SchemaDiscovery\Attributes\Attribute;
+use App\Infrastructure\JsonApi\SchemaDiscovery\Attributes\ResourceIdentifier;
 
 /**
  * Client

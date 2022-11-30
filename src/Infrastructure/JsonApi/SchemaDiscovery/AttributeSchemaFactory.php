@@ -11,14 +11,11 @@ declare(strict_types=1);
 
 namespace App\Infrastructure\JsonApi\SchemaDiscovery;
 
-use App\Infrastructure\JsonApi\SchemaDiscovery\AttributeSchemaFactory\AttributeParser;
+use App\Infrastructure\JsonApi\SchemaDiscovery\Attributes\AsResourceCollection;
+use App\Infrastructure\JsonApi\SchemaDiscovery\Attributes\AsResourceObject;
 use App\Infrastructure\JsonApi\SchemaDiscovery\AttributeSchemaFactory\PropertyConfigurationMethods;
-use App\Infrastructure\JsonApi\SchemaDiscovery\AttributeSchemaFactory\Tools;
-use Ramsey\Uuid\Uuid;
 use ReflectionClass;
-use ReflectionProperty;
 use Slick\JSONAPI\Object\ResourceSchema;
-use Slick\JSONAPI\Object\SchemaDiscover\ArraySchema;
 
 /**
  * AttributeSchemaFactory
@@ -45,40 +42,24 @@ final class AttributeSchemaFactory
     /**
      * Create a schema for provided object
      *
-     * @param object $object
+     * @param object|string $object
      * @return ResourceSchema
      */
-    public function createSchemaFor(object $object): ResourceSchema
+    public function createSchemaFor(object|string $object): ResourceSchema
     {
         $schemaClass = $this->asResourceObjectAttr->schemaClass;
         if ($schemaClass) {
             return new $schemaClass($object);
         }
 
-        $data = $this->createData($object);
-
-        AttributeParser::parseLinks($data, $this->asResourceObjectAttr);
-        AttributeParser::parseMeta($data, $this->asResourceObjectAttr);
-        AttributeParser::parseRelationships($data, $this->relationships, $object);
-
         return $this->asResourceObjectAttr instanceof AsResourceCollection
-            ? new ResourceCollectionSchema($data)
-            : new ArraySchema($data);
-    }
-
-    /**
-     * Creates a basic data array to use with array schema.
-     *
-     * @param object $object
-     * @return array
-     */
-    private function createData(object $object): array
-    {
-        return [
-            'type' => $this->type ?: AttributeParser::parseType($object, $this->asResourceObjectAttr),
-            'identifier' => $this->identifierField ? Tools::getValue($this->identifierField, $object) : Uuid::uuid4()->toString(),
-            'attributes' => AttributeParser::parseAttributes($object, $this->attributes),
-            'isCompound' => $this->asResourceObjectAttr->isCompound
-        ];
+            ? new ResourceCollectionSchema($object)
+            : new AttributeSchema(
+                resourceObject: $this->asResourceObjectAttr,
+                attributes: $this->attributes,
+                relationships: $this->relationships,
+                resourceIdentifier: $this->resourceIdentifier,
+                relationshipIdentifiers: $this->relationshipIdentifiers
+            );
     }
 }

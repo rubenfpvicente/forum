@@ -69,6 +69,16 @@ services:
                   - 'http://192.168.56.118'
     Slick\JSONAPI\Document\DocumentEncoder: '@json-api.document.encoder'
 
+    json-api.document.http.message.parser:
+        class: Slick\JSONAPI\Document\HttpMessageParser
+    Slick\JSONAPI\Document\HttpMessageParser: '@json-api.document.http.message.parser'
+
+    json-api.document.decoder:
+        class: Slick\JSONAPI\Document\Decoder\DefaultDecoder
+        arguments:
+            - '@json-api.schema.discover'
+            - '@json-api.schema.validator'
+    Slick\JSONAPI\Document\DocumentDecoder: '@json-api.document.decoder'
 
     # OAuth2.0 Server
     users.repository:

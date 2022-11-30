@@ -11,6 +11,8 @@ declare(strict_types=1);
 
 namespace App\Infrastructure\JsonApi\SchemaDiscovery;
 
+use App\Infrastructure\JsonApi\SchemaDiscovery\Attributes\AsResourceCollection;
+use App\Infrastructure\JsonApi\SchemaDiscovery\Attributes\AsResourceObject;
 use ReflectionClass;
 use ReflectionException;
 use Slick\JSONAPI\Exception\DocumentEncoderFailure;
@@ -35,7 +37,7 @@ final class AttributeSchemaDiscover implements SchemaDiscover
      */
     public function discover($object): ResourceSchema
     {
-        $key = get_class($object);
+        $key = is_string($object) ? $object : get_class($object);
         if (array_key_exists($key, $this->map)) {
             return $this->map[$key]->createSchemaFor($object);
         }
@@ -66,7 +68,7 @@ final class AttributeSchemaDiscover implements SchemaDiscover
      */
     public function isConvertible($object): bool
     {
-        $key = get_class($object);
+        $key = is_string($object) ? $object : get_class($object);
         if (array_key_exists($key, $this->map)) {
             return true;
         }
@@ -106,7 +108,8 @@ final class AttributeSchemaDiscover implements SchemaDiscover
         foreach ($attributes as $attribute) {
             $asResourceObjectAttr = $reflection->getAttributes($attribute);
             if (count($asResourceObjectAttr) > 0) {
-                return $asResourceObjectAttr[0]->newInstance();
+                $instance = $asResourceObjectAttr[0]->newInstance();
+                return $instance->withClass($reflection);
             }
         }
 

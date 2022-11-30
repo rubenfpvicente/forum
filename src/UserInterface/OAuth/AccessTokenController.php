@@ -37,7 +37,7 @@ final class AccessTokenController extends AbstractController
     ) {
     }
 
-    #[Route('/auth/access-token')]
+    #[Route(path: '/auth/access-token', defaults: ['jsonApi' => false])]
     public function login(Request $request): Response
     {
         $factory = new Psr17Factory();

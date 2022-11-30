@@ -11,9 +11,10 @@ declare(strict_types=1);
 
 namespace App\Infrastructure\JsonApi\SchemaDiscovery\AttributeSchemaFactory;
 
-use App\Infrastructure\JsonApi\SchemaDiscovery\Attribute;
-use App\Infrastructure\JsonApi\SchemaDiscovery\Relationship;
-use App\Infrastructure\JsonApi\SchemaDiscovery\ResourceIdentifier;
+use App\Infrastructure\JsonApi\SchemaDiscovery\Attributes\Attribute;
+use App\Infrastructure\JsonApi\SchemaDiscovery\Attributes\Relationship;
+use App\Infrastructure\JsonApi\SchemaDiscovery\Attributes\RelationshipIdentifier;
+use App\Infrastructure\JsonApi\SchemaDiscovery\Attributes\ResourceIdentifier;
 use ReflectionClass;
 use ReflectionProperty;
 
@@ -25,11 +26,16 @@ use ReflectionProperty;
 trait PropertyConfigurationMethods
 {
 
-    private ?ReflectionProperty $identifierField = null;
-    private ?string $type = null;
-    /** @var array<string, ReflectionProperty>  */
+    /** @var array<string, Attribute>  */
     private array $attributes = [];
+
+    /** @var array<string, Relationship>|null  */
     private ?array $relationships = null;
+
+    private ?ResourceIdentifier $resourceIdentifier = null;
+
+    /** @var array<string, RelationshipIdentifier>  */
+    private array $relationshipIdentifiers = [];
 
     /**
      * Read all class property attributes
@@ -66,6 +72,11 @@ trait PropertyConfigurationMethods
 
             if ($instance instanceof Relationship) {
                 $this->configureRelationship($instance, $property);
+                continue;
+            }
+
+            if ($instance instanceof RelationshipIdentifier) {
+                $this->configureRelationshipIdentifier($instance, $property);
             }
         }
     }
@@ -78,8 +89,7 @@ trait PropertyConfigurationMethods
      */
     private function configureResourceIdentifier(ResourceIdentifier $attribute, ReflectionProperty $property): void
     {
-        $this->type = $attribute->type;
-        $this->identifierField = $property;
+        $this->resourceIdentifier = $attribute->withProperty($property);
     }
 
     /**
@@ -90,7 +100,7 @@ trait PropertyConfigurationMethods
      */
     private function configureAttribute(Attribute $instance, ReflectionProperty $property): void
     {
-        $this->attributes[$instance->name ?: $property->getName()] = $property;
+        $this->attributes[$instance->name ?: $property->getName()] = $instance->withProperty($property);
     }
 
     /**
@@ -101,6 +111,17 @@ trait PropertyConfigurationMethods
      */
     private function configureRelationship(Relationship $instance, ReflectionProperty $property): void
     {
-        $this->relationships[$instance->name ?: $property->name] = $property;
+        $this->relationships[$instance->name ?: $property->name] = $instance->withProperty($property);
+    }
+
+    /**
+     * Configures relationship identifiers' list
+     *
+     * @param RelationshipIdentifier $instance
+     * @param ReflectionProperty $property
+     */
+    private function configureRelationshipIdentifier(RelationshipIdentifier $instance, ReflectionProperty $property): void
+    {
+        $this->relationshipIdentifiers[$instance->name ?: $property->name] = $instance->withProperty($property);
     }
 }

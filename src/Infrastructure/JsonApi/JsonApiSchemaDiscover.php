@@ -36,6 +36,7 @@ final class JsonApiSchemaDiscover implements SchemaDiscover
      *
      * @param string $namespacePrefix
      * @param string $psr4prefix
+     * @param array $ignoredNames
      */
     public function __construct(
         private readonly string $namespacePrefix = "App\\Infrastructure\\JsonApi\\",
@@ -62,7 +63,7 @@ final class JsonApiSchemaDiscover implements SchemaDiscover
             }
         }
 
-        $key = get_class($object);
+        $key = is_string($object) ? $object : get_class($object);
         throw new DocumentEncoderFailure(
             "Couldn't create a resource schema of the resource '$key'. " .
             "No JSON API attribute or ResourceSchema was defined for it."
@@ -80,6 +81,7 @@ final class JsonApiSchemaDiscover implements SchemaDiscover
 
     /**
      * @inheritDoc
+     * @throws ReflectionException
      */
     public function isConvertible($object): bool
     {

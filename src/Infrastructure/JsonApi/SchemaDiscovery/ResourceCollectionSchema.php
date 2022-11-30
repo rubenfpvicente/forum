@@ -24,7 +24,7 @@ use Slick\JSONAPI\Object\ResourceCollectionSchema as JSONAPIResourceCollectionSc
 final class ResourceCollectionSchema extends AbstractResourceSchema implements JSONAPIResourceCollectionSchema
 {
 
-    public function __construct(private readonly array $data)
+    public function __construct(private readonly iterable $data)
     {
     }
 
