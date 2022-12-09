@@ -39,14 +39,19 @@ class AsResourceObject
      * @param array|null $links
      * @param string|null $schemaClass
      * @param bool $isCompound
+     * @param string|null $metaFromMethod
+     * @param string|null $linksFromMethod
      */
     public function __construct(
         public readonly ?string $type = null,
-        public readonly ?array $meta = null,
-        public readonly ?array $links = null,
+        public readonly ?array  $meta = null,
+        public readonly ?array  $links = null,
         public readonly ?string $schemaClass = null,
-        public readonly bool $isCompound = false
-    ) {}
+        public readonly bool    $isCompound = false,
+        public readonly ?string $metaFromMethod = null,
+        public readonly ?string $linksFromMethod = null
+    ) {
+    }
 
     /**
      * Sets the reflection class for this resource

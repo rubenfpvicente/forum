@@ -82,7 +82,9 @@ final class Pagination implements JsonSerializable
      */
     public function offset(): int
     {
-        return $this->rowsPerPage * ($this->page - 1);
+        $max = $this->totalRows / $this->rowsPerPage;
+        $offset = (int)($this->rowsPerPage * (min($this->page, $max) - 1));
+        return $offset <= 0 ? 0 : $offset;
     }
 
     /**

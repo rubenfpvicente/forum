@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace App\Application;
 
+use App\Application\Query\ParameterReader;
 use IteratorAggregate;
 
 /**
@@ -55,4 +56,12 @@ interface Query extends IteratorAggregate
      * @return self
      */
     public function withParam(string $name, mixed $value): self;
+
+    /**
+     * Sets a custom parameter reader for pagination, filter and sorting
+     *
+     * @param ParameterReader $parameterReader
+     * @return $this
+     */
+    public function withParameterReader(ParameterReader $parameterReader): self;
 }

@@ -23,14 +23,13 @@ class Password implements Stringable
      */
     public function __construct(?string $string = null)
     {
+        $string = $string ?: self::randomPassword();
         if (preg_match(self::HASH_REGEX, $string)) {
             $this->hash = $string;
             return;
         }
 
-        $this->hash = $string
-            ? password_hash($string, PASSWORD_ARGON2ID)
-            : password_hash(self::randomPassword(), PASSWORD_ARGON2ID);
+        $this->hash = password_hash($string, PASSWORD_ARGON2ID);
     }
 
     /**

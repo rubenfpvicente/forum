@@ -27,6 +27,9 @@ services:
         tags:
             - { name: kernel.event_listener, event: kernel.controller, priority: 10 }
 
+    App\Application\Questions\QuestionsListQuery:
+        class: App\Infrastructure\Persistence\Doctrine\Questions\DoctrineQuestionsListQuery
+
     App\Application\OAuth\ClientListQuery:
         class: App\Infrastructure\Persistence\Doctrine\OAuth\DoctrineClientListQuery
     App\Application\UserManagement\UserListQuery:

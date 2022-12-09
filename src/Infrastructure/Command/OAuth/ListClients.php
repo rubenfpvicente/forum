@@ -60,7 +60,7 @@ final class ListClients extends Command
             $uris = $client->redirectUri();
             $rows[] = [$client->clientId(), $client->name(), $client->isPublic(), $client->secret(), $uris ? implode(',', $uris): null];
         }
-        $this->style->table(["Clint ID", "Name", "Public?", "Secret", "Redirect URIs"], $rows);
+        $this->style->table(["Client ID", "Name", "Public?", "Secret", "Redirect URIs"], $rows);
 
         return Command::SUCCESS;
     }

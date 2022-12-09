@@ -14,6 +14,7 @@ namespace App\Infrastructure\JsonApi\SchemaDiscovery;
 use App\Infrastructure\JsonApi\SchemaDiscovery\Attributes\AsResourceCollection;
 use App\Infrastructure\JsonApi\SchemaDiscovery\Attributes\AsResourceObject;
 use App\Infrastructure\JsonApi\SchemaDiscovery\AttributeSchemaFactory\PropertyConfigurationMethods;
+use Doctrine\Common\Collections\Collection;
 use ReflectionClass;
 use Slick\JSONAPI\Object\ResourceSchema;
 
@@ -53,7 +54,7 @@ final class AttributeSchemaFactory
         }
 
         return $this->asResourceObjectAttr instanceof AsResourceCollection
-            ? new ResourceCollectionSchema($object)
+            ? new ResourceCollectionSchema($this->asResourceObjectAttr)
             : new AttributeSchema(
                 resourceObject: $this->asResourceObjectAttr,
                 attributes: $this->attributes,
@@ -62,4 +63,22 @@ final class AttributeSchemaFactory
                 relationshipIdentifiers: $this->relationshipIdentifiers
             );
     }
+
+    public function parseArrayFrom($object): array
+    {
+        if (is_array($object)) {
+            return $object;
+        }
+
+        if ($object instanceof Collection) {
+            return $object->toArray();
+        }
+
+        if ($object instanceof \IteratorAggregate) {
+            return $this->parseArrayFrom($object->getIterator());
+        }
+
+        return [];
+    }
+
 }

@@ -64,4 +64,12 @@ final class DoctrineUserListQuery extends UserListQuery
 
         return new ArrayCollection();
     }
+
+    /**
+     * @inheritDoc
+     */
+    protected function baseUrlPath(): string
+    {
+        return "/users";
+    }
 }

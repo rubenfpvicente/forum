@@ -11,6 +11,7 @@ doctrine:
             Password: App\Infrastructure\Persistence\Doctrine\UserManagement\DoctrinePassword
             ClientId: App\Infrastructure\Persistence\Doctrine\OAuth\DoctrineClientId
             ScopeId: App\Infrastructure\Persistence\Doctrine\OAuth\DoctrineScopeId
+            QuestionId: App\Infrastructure\Persistence\Doctrine\Questions\DoctrineQuestionId
     orm:
         auto_generate_proxy_classes: true
         naming_strategy: doctrine.orm.naming_strategy.underscore_number_aware

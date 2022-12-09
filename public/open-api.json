@@ -1,0 +1,982 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "DAF Forum API",
+    "description": "This is a simple API that have the forum 'StackOverflow' as an inspiration.\n\nIt's develop with Symfony 6 and applying DDD and TDD techniques with _PHP 8.1_.\nIt is also have ideas of the hexagonal application architecture to separate the several layers of the application by its responsibility.\n\nThis project was made is a practical activity made by students of Azores' University in the class of 'Application development using frameworks'.",
+    "contact": {
+      "name": "Tutor: Filipe Silva",
+      "email": "filipe.mm.silva@uac.pt"
+    },
+    "version": "v0.1.0"
+  },
+  "servers": [
+    {
+      "url": "http://0.0.0.0:8080",
+      "description": "Development server"
+    }
+  ],
+  "paths": {
+    "/users/me": {
+      "get": {
+        "summary": "User information",
+        "operationId": "get-users-me",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "User Management"
+        ],
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/vnd.api+json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserDocument"
+              },
+              "examples": {
+                "User": {
+                  "value": {
+                    "jsonapi": {
+                      "version": "1.1"
+                    },
+                    "data": {
+                      "type": "users",
+                      "id": "a697edde-a551-407b-9a1b-9e8f107fbd41",
+                      "attributes": {
+                        "name": "John Doe",
+                        "email": "john.doe@example.com"
+                      },
+                      "links": {
+                        "self": "/users/a697edde-a551-407b-9a1b-9e8f107fbd41"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "description": ""
+        },
+        "security": [
+          {
+            "OAuth2": [
+              "forum"
+            ]
+          }
+        ],
+        "description": "Returns the user information form the data that is prensent in the authorization header (OAuth2.0 jwt Token)."
+      }
+    },
+    "/users/{userIdOrEmail}": {
+      "get": {
+        "tags": [
+          "User Management"
+        ],
+        "summary": "Read user by ID/Email",
+        "description": "This endpoint returns the information of the user that has the provided identifier or email address.",
+        "operationId": "readUser",
+        "responses": {
+          "200": {
+            "description": "User resource document",
+            "content": {
+              "application/vnd.api+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserDocument"
+                },
+                "examples": {
+                  "User": {
+                    "value": {
+                      "jsonapi": {
+                        "version": "1.1"
+                      },
+                      "data": {
+                        "type": "users",
+                        "id": "a697edde-a551-407b-9a1b-9e8f107fbd41",
+                        "attributes": {
+                          "name": "John Doe",
+                          "email": "john.doe@example.com"
+                        },
+                        "links": {
+                          "self": "/users/a697edde-a551-407b-9a1b-9e8f107fbd41"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/vnd.api+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/jsonApiError401"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/vnd.api+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/entityNotFound"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2": [
+              "forum"
+            ]
+          }
+        ]
+      },
+      "parameters": [
+        {
+          "schema": {
+            "type": "string"
+          },
+          "name": "userIdOrEmail",
+          "in": "path",
+          "required": true,
+          "description": "User identifier or email adddress"
+        }
+      ]
+    },
+    "/access-token": {
+      "post": {
+        "summary": "Access token",
+        "operationId": "post-access-token",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccessToken"
+                },
+                "examples": {
+                  "Access token": {
+                    "value": {
+                      "token_type": "Bearer",
+                      "expires_in": 3599,
+                      "access_token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJhdWQiOiJhcHAtMSIsImp0aSI6IjgyOWQ3ZjYxYWVmZTc2NmExZGM3ZDBmM2I4ZmZmYzc0NWE2MjYzNjhiNTc3NjIwYjdmYjMyYWYzOWY1OWZjY2IyMGVkNDc2MGM4NTgxNTVkIiwiaWF0IjoxNjY5ODM0NjY3LjEwNDA0NSwibmJmIjoxNjY5ODM0NjY3LjEwNDA0OCwiZXhwIjoxNjY5ODM4MjY2Ljk3NTMzOCwic3ViIjoiNGE3NTUzMjMtNTBlZi00NmU1LThjZDEtNzcwNmYzZjhmMDA2Iiwic2NvcGVzIjpbImZvcnVtIl19.juNnyvd1F5WqAXw61Zk403KGySPZy9VWwthsLTnNOwqK2L0cKYUpuGfHQ18kx6zTd3BUdb0D9vTRZSm4HhSibmSwPTPlKWIppaIDnXjASTyny0SbsawEVG0ce_jZMxW5bcv0SWcMIXLQWgMYuFbXrN5K8vAQPVCDBQw3_PPo31N2wP16RCBnZmQa5I_nDSs-bE4QtXUkuuA_Y47CWczM4vQjiVUQs_ZL15QfMay4PaCOq3JuVGDa3LgviFphlYH44Hoe_jkuI1qofULljJxpaggKUQ4QegYDVPBSJOOACNQ7wmWZ_6X5HSlD-tjRkXol5WngFcCwet_LED-TcNFVxQ",
+                      "refresh_token": "def502006b51da5b30234e3b6d09f20b7b75c20dc0e820ecc1e20cc3cac8f4a6f7a8a653defc65b6e7a56aa388f815699999a4edcf540668fa4dd2e8033e31bce0d496fe46555422114acde39e6459246e223f6301aca6f9f7cbf5aaff9aa9fe8cbd195e68b751228c605c2183f862d05aea8d59b37063ebb3d915aa65426ec54ad469b45ecf885643494a6856c745c187423118b6876a138142e18a1d7bdc1dbe0f8daf36fa97d6969a5e98444f2ac45c8043198495eb0174bb3062a67a59178fd498b652ad18f476a4acb84dcf3696b9d19c60e4f2a5497ec3228432660b3deaa2cfa162f4fd412003ba6738864320bd32cb4d94ccf6699653960210c9163f25d12475e156a70af4cc16b41241693815652ef70ae3b9835a32666228fd9d9d1c40b5040babf7ce06755e1a5d109b27c25cf65c6c75e0765536c5dda111ac647188575d381c193807776ee3ef43c7bc76d13b12a68acc1d4a0ee522a88231e5641f833aa11fbb5e499b4a906ee03ba857d834f868a7f540d0174977ae5b20c0fd462fcd3441f53980e1bad18b06e27883"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "description": "Requests a access token using password or refresh token grant",
+        "requestBody": {
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "grant": {
+                    "type": "string",
+                    "enum": [
+                      "password",
+                      "refresh_token"
+                    ],
+                    "default": "password"
+                  },
+                  "scope": {
+                    "type": "string",
+                    "default": "forum"
+                  },
+                  "username": {
+                    "type": "string"
+                  },
+                  "password": {
+                    "type": "string",
+                    "format": "password"
+                  },
+                  "refresh_token": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "grant",
+                  "scope"
+                ]
+              },
+              "examples": {
+                "Password grant": {
+                  "value": {
+                    "grant": "password",
+                    "scope": "forum",
+                    "username": "string",
+                    "password": "pa$$word"
+                  }
+                },
+                "Refresh token": {
+                  "value": {
+                    "grant": "password",
+                    "scope": "forum",
+                    "refresh_token": "def502006b51da5b30234e3b6d09f20b7b75c20dc0e820ecc1e20cc3cac8f4a6f7a8a653defc65b6e7a56aa388f815699999a4edcf540668fa4dd2e8033e31bce0d496fe46555422114acde39e6459246e223f6301aca6f9f7cbf5aaff9aa9fe8cbd195e68b751228c605c2183f862d05aea8d59b37063ebb3d915aa65426ec54ad469b45ecf885643494a6856c745c187423118b6876a138142e18a1d7bdc1dbe0f8daf36fa97d6969a5e98444f2ac45c8043198495eb0174bb3062a67a59178fd498b652ad18f476a4acb84dcf3696b9d19c60e4f2a5497ec3228432660b3deaa2cfa162f4fd412003ba6738864320bd32cb4d94ccf6699653960210c9163f25d12475e156a70af4cc16b41241693815652ef70ae3b9835a32666228fd9d9d1c40b5040babf7ce06755e1a5d109b27c25cf65c6c75e0765536c5dda111ac647188575d381c193807776ee3ef43c7bc76d13b12a68acc1d4a0ee522a88231e5641f833aa11fbb5e499b4a906ee03ba857d834f868a7f540d0174977ae5b20c0fd462fcd3441f53980e1bad18b06e27883"
+                  }
+                }
+              }
+            }
+          },
+          "description": ""
+        },
+        "security": [
+          {
+            "Basic": []
+          }
+        ],
+        "tags": [
+          "Open Authentication 2.0"
+        ]
+      }
+    },
+    "/questions": {
+      "post": {
+        "summary": "Place question",
+        "operationId": "post-questions",
+        "responses": {
+          "201": {
+            "description": "OK, Question document",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Question"
+                }
+              }
+            },
+            "headers": {
+              "location": {
+                "schema": {
+                  "type": "string",
+                  "format": "uri",
+                  "example": "https://example.com/questions/a77ad860-4f64-4812-a240-449ca9e96a27"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request, when data isn't correct",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "jsonapi": {
+                      "type": "object",
+                      "properties": {
+                        "version": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "status": {
+                            "type": "string"
+                          },
+                          "title": {
+                            "type": "string"
+                          },
+                          "detail": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "x-examples": {
+                    "Example 1": {
+                      "jsonapi": {
+                        "version": "1.1"
+                      },
+                      "errors": [
+                        {
+                          "id": "638f6b204ba45",
+                          "status": "401",
+                          "title": "The resource owner or authorization server denied the request.",
+                          "detail": "Access token could not be verified"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Questions"
+        ],
+        "description": "Create a new questions",
+        "security": [
+          {
+            "OAuth2": [
+              "forum"
+            ]
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "header",
+            "name": "content-type",
+            "description": "application/vnd.api+json"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/vnd.api+json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateQuestion"
+              }
+            }
+          },
+          "description": "Data to create a question"
+        }
+      },
+      "get": {
+        "summary": "Question list",
+        "operationId": "get-questions",
+        "description": "Returns a list of available questions.",
+        "tags": [
+          "Questions"
+        ],
+        "security": [
+          {
+            "OAuth2": [
+              "forum"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "jsonapi": {
+                      "type": "object",
+                      "properties": {
+                        "version": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string"
+                          },
+                          "id": {
+                            "type": "string"
+                          },
+                          "attributes": {
+                            "type": "object",
+                            "properties": {
+                              "title": {
+                                "type": "string"
+                              },
+                              "body": {
+                                "type": "string"
+                              },
+                              "userId": {
+                                "type": "string"
+                              },
+                              "name": {
+                                "type": "string"
+                              },
+                              "email": {
+                                "type": "string"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "links": {
+                      "type": "object",
+                      "properties": {
+                        "first": {
+                          "type": "string"
+                        },
+                        "prev": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "meta": {
+                      "type": "object",
+                      "properties": {
+                        "totalPages": {
+                          "type": "integer"
+                        },
+                        "currentPage": {
+                          "type": "integer"
+                        },
+                        "totalRows": {
+                          "type": "integer"
+                        },
+                        "rowsPerPage": {
+                          "type": "integer"
+                        }
+                      }
+                    }
+                  },
+                  "x-examples": {
+                    "Example 1": {
+                      "jsonapi": {
+                        "version": "1.1"
+                      },
+                      "data": [
+                        {
+                          "type": "questions",
+                          "id": "87621f0b-d7ba-4397-91e0-3102d32eec62",
+                          "attributes": {
+                            "title": "This is my awesome question",
+                            "body": "Why should I do this??",
+                            "userId": "4a755323-50ef-46e5-8cd1-7706f3f8f006",
+                            "name": "Filipe Silva",
+                            "email": "silvam.filipe@gmail.com"
+                          }
+                        },
+                        {
+                          "type": "questions",
+                          "id": "c61f8e57-924a-4c3e-8cbc-525079c9fa2c",
+                          "attributes": {
+                            "title": "This is my awesome new question",
+                            "body": "Why should I do this??",
+                            "userId": "4a755323-50ef-46e5-8cd1-7706f3f8f006",
+                            "name": "Filipe Silva",
+                            "email": "silvam.filipe@gmail.com"
+                          }
+                        }
+                      ],
+                      "links": {
+                        "first": "http://192.168.56.118/questions?page[limit]=2&page[offset]=0",
+                        "prev": "http://192.168.56.118/questions?page[limit]=2&page[offset]=0"
+                      },
+                      "meta": {
+                        "totalPages": 2,
+                        "currentPage": 2,
+                        "totalRows": 4,
+                        "rowsPerPage": 2
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "parameters": []
+    },
+    "/questions/{id}": {
+      "parameters": [
+        {
+          "schema": {
+            "type": "string",
+            "format": "uuid",
+            "example": "7548ed6a-f086-43f4-8b99-bbd203b43164"
+          },
+          "name": "id",
+          "in": "path",
+          "required": true
+        }
+      ],
+      "get": {
+        "summary": "Question by ID",
+        "tags": [
+          "Questions"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Question"
+                }
+              }
+            }
+          }
+        },
+        "operationId": "get-questions-id",
+        "description": "Returns a question saved with provided question identifier.",
+        "security": [
+          {
+            "OAuth2": [
+              "forum"
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "UserDocument": {
+        "title": "User Document",
+        "description": "An application user",
+        "properties": {
+          "jsonapi": {
+            "$ref": "#/components/schemas/jsonApiVersion"
+          },
+          "data": {
+            "properties": {
+              "type": {
+                "type": "string",
+                "example": "users"
+              },
+              "id": {
+                "type": "string",
+                "example": "a697edde-a551-407b-9a1b-9e8f107fbd41"
+              },
+              "attributes": {
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "example": "John Doe"
+                  },
+                  "email": {
+                    "type": "string",
+                    "example": "john.doe@example.com"
+                  }
+                },
+                "type": "object"
+              },
+              "links": {
+                "properties": {
+                  "self": {
+                    "type": "string",
+                    "example": "/users/a697edde-a551-407b-9a1b-9e8f107fbd41"
+                  }
+                },
+                "type": "object"
+              }
+            },
+            "type": "object"
+          }
+        },
+        "type": "object"
+      },
+      "entityNotFound": {
+        "properties": {
+          "jsonapi": {
+            "$ref": "#/components/schemas/jsonApiVersion"
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "allOf": [
+                {
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "example": "6384ab03cd20e"
+                    },
+                    "status": {
+                      "type": "string",
+                      "example": "404"
+                    },
+                    "title": {
+                      "type": "string",
+                      "example": "The resource owner or authorization server denied the request."
+                    },
+                    "detail": {
+                      "type": "string",
+                      "example": "Access token could not be verified"
+                    }
+                  },
+                  "type": "object"
+                }
+              ]
+            }
+          }
+        },
+        "type": "object"
+      },
+      "jsonApiError401": {
+        "properties": {
+          "jsonapi": {
+            "$ref": "#/components/schemas/jsonApiVersion"
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "allOf": [
+                {
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "example": "6384ab03cd20e"
+                    },
+                    "status": {
+                      "type": "string",
+                      "example": "401"
+                    },
+                    "title": {
+                      "type": "string",
+                      "example": "The resource owner or authorization server denied the request."
+                    },
+                    "detail": {
+                      "type": "string",
+                      "example": "Access token could not be verified"
+                    }
+                  },
+                  "type": "object"
+                }
+              ]
+            }
+          }
+        },
+        "type": "object"
+      },
+      "jsonApiVersion": {
+        "properties": {
+          "version": {
+            "enum": [
+              "1.0",
+              "1.1"
+            ],
+            "example": "1.1"
+          }
+        },
+        "type": "object"
+      },
+      "AccessToken": {
+        "type": "object",
+        "x-examples": {
+          "Access token": {
+            "token_type": "Bearer",
+            "expires_in": 3599,
+            "access_token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJhdWQiOiJhcHAtMSIsImp0aSI6IjgyOWQ3ZjYxYWVmZTc2NmExZGM3ZDBmM2I4ZmZmYzc0NWE2MjYzNjhiNTc3NjIwYjdmYjMyYWYzOWY1OWZjY2IyMGVkNDc2MGM4NTgxNTVkIiwiaWF0IjoxNjY5ODM0NjY3LjEwNDA0NSwibmJmIjoxNjY5ODM0NjY3LjEwNDA0OCwiZXhwIjoxNjY5ODM4MjY2Ljk3NTMzOCwic3ViIjoiNGE3NTUzMjMtNTBlZi00NmU1LThjZDEtNzcwNmYzZjhmMDA2Iiwic2NvcGVzIjpbImZvcnVtIl19.juNnyvd1F5WqAXw61Zk403KGySPZy9VWwthsLTnNOwqK2L0cKYUpuGfHQ18kx6zTd3BUdb0D9vTRZSm4HhSibmSwPTPlKWIppaIDnXjASTyny0SbsawEVG0ce_jZMxW5bcv0SWcMIXLQWgMYuFbXrN5K8vAQPVCDBQw3_PPo31N2wP16RCBnZmQa5I_nDSs-bE4QtXUkuuA_Y47CWczM4vQjiVUQs_ZL15QfMay4PaCOq3JuVGDa3LgviFphlYH44Hoe_jkuI1qofULljJxpaggKUQ4QegYDVPBSJOOACNQ7wmWZ_6X5HSlD-tjRkXol5WngFcCwet_LED-TcNFVxQ",
+            "refresh_token": "def502006b51da5b30234e3b6d09f20b7b75c20dc0e820ecc1e20cc3cac8f4a6f7a8a653defc65b6e7a56aa388f815699999a4edcf540668fa4dd2e8033e31bce0d496fe46555422114acde39e6459246e223f6301aca6f9f7cbf5aaff9aa9fe8cbd195e68b751228c605c2183f862d05aea8d59b37063ebb3d915aa65426ec54ad469b45ecf885643494a6856c745c187423118b6876a138142e18a1d7bdc1dbe0f8daf36fa97d6969a5e98444f2ac45c8043198495eb0174bb3062a67a59178fd498b652ad18f476a4acb84dcf3696b9d19c60e4f2a5497ec3228432660b3deaa2cfa162f4fd412003ba6738864320bd32cb4d94ccf6699653960210c9163f25d12475e156a70af4cc16b41241693815652ef70ae3b9835a32666228fd9d9d1c40b5040babf7ce06755e1a5d109b27c25cf65c6c75e0765536c5dda111ac647188575d381c193807776ee3ef43c7bc76d13b12a68acc1d4a0ee522a88231e5641f833aa11fbb5e499b4a906ee03ba857d834f868a7f540d0174977ae5b20c0fd462fcd3441f53980e1bad18b06e27883"
+          }
+        },
+        "properties": {
+          "token_type": {
+            "type": "string"
+          },
+          "expires_in": {
+            "type": "integer"
+          },
+          "access_token": {
+            "type": "string"
+          },
+          "refresh_token": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "token_type",
+          "expires_in",
+          "access_token"
+        ]
+      },
+      "Question": {
+        "title": "Question",
+        "x-stoplight": {
+          "id": "pz47dixszg2t2"
+        },
+        "type": "object",
+        "properties": {
+          "jsonapi": {
+            "$ref": "#/components/schemas/jsonApiVersion"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "default": "questions",
+                "example": "questions"
+              },
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "attributes": {
+                "type": "object",
+                "properties": {
+                  "title": {
+                    "type": "string"
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "isClosed": {
+                    "type": "boolean",
+                    "default": false
+                  },
+                  "isArchived": {
+                    "type": "boolean",
+                    "default": false
+                  }
+                },
+                "required": [
+                  "title",
+                  "description"
+                ]
+              },
+              "links": {
+                "type": "object",
+                "properties": {
+                  "self": {
+                    "type": "string",
+                    "format": "uri",
+                    "example": "http://example.org/questions/4ebac3a0-c496-46ee-8149-5ef02e9411d2"
+                  }
+                }
+              },
+              "relationships": {
+                "type": "object",
+                "properties": {
+                  "owner": {
+                    "type": "object",
+                    "properties": {
+                      "links": {
+                        "type": "object",
+                        "properties": {
+                          "self": {
+                            "type": "string",
+                            "example": "http://example.org/questions/4ebac3a0-c496-46ee-8149-5ef02e9411d2/relationships/owner",
+                            "format": "uri"
+                          }
+                        }
+                      },
+                      "data": {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "default": "users"
+                          },
+                          "id": {
+                            "type": "string",
+                            "format": "uuid",
+                            "example": "e6c619c0-ccb9-4782-a7e1-22ee09ff6480"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "included": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/UserResource"
+                }
+              }
+            },
+            "required": [
+              "id"
+            ]
+          }
+        },
+        "x-examples": {
+          "Question": {
+            "jsonapi": {
+              "version": "1.1"
+            },
+            "data": {
+              "type": "questions",
+              "id": "497f6eca-6276-4993-bfeb-53cbbbba6f08",
+              "attributes": {
+                "title": "string",
+                "description": "string",
+                "isClosed": false,
+                "isArchived": false
+              },
+              "links": {
+                "self": "http://example.org/questions/4ebac3a0-c496-46ee-8149-5ef02e9411d2"
+              },
+              "relationships": {
+                "owner": {
+                  "links": {
+                    "self": "http://example.org/questions/4ebac3a0-c496-46ee-8149-5ef02e9411d2/relationships/owner"
+                  },
+                  "data": {
+                    "type": "users",
+                    "id": "e6c619c0-ccb9-4782-a7e1-22ee09ff6480"
+                  }
+                }
+              },
+              "included": [
+                {
+                  "type": "users",
+                  "id": "4a755323-50ef-46e5-8cd1-7706f3f8f006",
+                  "attributes": {
+                    "name": "John Doe",
+                    "email": "john.doe@example.com"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      },
+      "UserResource": {
+        "type": "object",
+        "x-examples": {
+          "Example 1": {
+            "type": "users",
+            "id": "4a755323-50ef-46e5-8cd1-7706f3f8f006",
+            "attributes": {
+              "name": "Filipe Silva",
+              "email": "silvam.filipe@gmail.com"
+            }
+          }
+        },
+        "properties": {
+          "type": {
+            "type": "string",
+            "default": "users"
+          },
+          "id": {
+            "type": "string",
+            "example": "4a755323-50ef-46e5-8cd1-7706f3f8f006"
+          },
+          "attributes": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "example": "John Doe"
+              },
+              "email": {
+                "type": "string",
+                "format": "email",
+                "example": "john.doe@example.com"
+              }
+            }
+          }
+        }
+      },
+      "CreateQuestion": {
+        "type": "object",
+        "x-examples": {
+          "Create question": {
+            "data": {
+              "type": "questions",
+              "attributes": {
+                "title": "This is my awesome question",
+                "body": "Why should I do this??"
+              },
+              "relationships": {
+                "owner": {
+                  "data": {
+                    "type": "users",
+                    "id": "a05301b3-61d4-4fb3-8b08-c09880a795b6"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "properties": {
+          "data": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "default": "questions"
+              },
+              "attributes": {
+                "type": "object",
+                "properties": {
+                  "title": {
+                    "type": "string"
+                  },
+                  "body": {
+                    "type": "string"
+                  }
+                }
+              },
+              "relationships": {
+                "type": "object",
+                "properties": {
+                  "owner": {
+                    "type": "object",
+                    "properties": {
+                      "data": {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "default": "users"
+                          },
+                          "id": {
+                            "type": "string",
+                            "format": "uuid"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "securitySchemes": {
+      "OAuth2": {
+        "type": "oauth2",
+        "description": "This API uses OAuth2 with the authorization code grant flow",
+        "flows": {
+          "password": {
+            "tokenUrl": "/access-token",
+            "refreshUrl": "/access-token",
+            "scopes": {
+              "forum": "Manage your owned forum resources."
+            }
+          }
+        }
+      },
+      "Basic": {
+        "type": "http",
+        "scheme": "basic",
+        "description": "Basic authentication used when requesting tokens"
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "Open Authentication 2.0",
+      "description": "Endpoints to use with Open Authentication Sercer, on the sama server as the resource server."
+    },
+    {
+      "name": "Questions"
+    },
+    {
+      "name": "User Management"
+    }
+  ]
+}

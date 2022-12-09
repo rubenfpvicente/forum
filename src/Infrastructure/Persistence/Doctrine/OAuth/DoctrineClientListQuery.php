@@ -73,4 +73,12 @@ final class DoctrineClientListQuery extends ClientListQuery
 
         return $results;
     }
+
+    /**
+     * @inheritDoc
+     */
+    protected function baseUrlPath(): string
+    {
+        return "/clients";
+    }
 }

@@ -23,6 +23,7 @@ abstract class AbstractQuery implements Query
 {
 
     protected ?Traversable $data = null;
+    private ?ParameterReader $parameterReader = null;
     private array $params = [];
 
     /**
@@ -79,6 +80,20 @@ abstract class AbstractQuery implements Query
         $clone = clone $this;
         $clone->data = null;
         $clone->params[$name] = $value;
+        return $clone;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function withParameterReader(ParameterReader $parameterReader): self
+    {
+        $clone = clone $this;
+        $clone->data = null;
+        if ($parameterReader->pagination()) {
+            $clone = $clone->withParam('page', $parameterReader->pagination());
+        }
+
         return $clone;
     }
 }

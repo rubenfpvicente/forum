@@ -11,7 +11,10 @@ declare(strict_types=1);
 
 namespace App\Infrastructure\JsonApi\SchemaDiscovery;
 
-use Doctrine\Common\Collections\Collection;
+use App\Infrastructure\JsonApi\SchemaDiscovery\Attributes\AsResourceCollection;
+use App\Infrastructure\JsonApi\SchemaDiscovery\AttributeSchemaFactory\AttributeParser;
+use IteratorAggregate;
+use Ramsey\Uuid\Uuid;
 use Slick\JSONAPI\Exception\DocumentEncoderFailure;
 use Slick\JSONAPI\Object\AbstractResourceSchema;
 use Slick\JSONAPI\Object\ResourceCollectionSchema as JSONAPIResourceCollectionSchema;
@@ -24,8 +27,9 @@ use Slick\JSONAPI\Object\ResourceCollectionSchema as JSONAPIResourceCollectionSc
 final class ResourceCollectionSchema extends AbstractResourceSchema implements JSONAPIResourceCollectionSchema
 {
 
-    public function __construct(private readonly iterable $data)
-    {
+    public function __construct(
+        private readonly AsResourceCollection $asResourceCollection
+    ) {
     }
 
     /**
@@ -33,7 +37,7 @@ final class ResourceCollectionSchema extends AbstractResourceSchema implements J
      */
     public function type($object): string
     {
-        return $this->data['type'];
+        return $this->asResourceCollection->parseType();
     }
 
     /**
@@ -41,7 +45,7 @@ final class ResourceCollectionSchema extends AbstractResourceSchema implements J
      */
     public function identifier($object): ?string
     {
-        return $this->data['identifier'];
+        return Uuid::uuid4()->toString();
     }
 
     /**
@@ -49,7 +53,7 @@ final class ResourceCollectionSchema extends AbstractResourceSchema implements J
      */
     public function attributes($object): ?array
     {
-        if ($object instanceof \IteratorAggregate) {
+        if ($object instanceof IteratorAggregate) {
             $data = [];
             foreach ($object as $value) {
                 $data[] = $value;
@@ -77,8 +81,7 @@ final class ResourceCollectionSchema extends AbstractResourceSchema implements J
      */
     public function isCompound(): bool
     {
-        $key = 'isCompound';
-        return array_key_exists($key, $this->data) && $this->data[$key];
+        return $this->asResourceCollection->isCompound;
     }
 
     /**
@@ -86,7 +89,14 @@ final class ResourceCollectionSchema extends AbstractResourceSchema implements J
      */
     public function links($object): ?array
     {
-        return $this->dataValue('links');
+        $links = AttributeParser::parseLinks($this->asResourceCollection);
+        $linksFromMethod = $this->asResourceCollection->linksFromMethod;
+        if ($linksFromMethod) {
+            $links = is_array($links) ? $links : [];
+            $links = array_merge($links, $object->$linksFromMethod());
+        }
+
+        return $links;
     }
 
     /**
@@ -94,17 +104,14 @@ final class ResourceCollectionSchema extends AbstractResourceSchema implements J
      */
     public function meta($object): ?array
     {
-        return $this->dataValue('meta');
+        $meta = AttributeParser::parseMeta($this->asResourceCollection);
+        $metaFromMethod = $this->asResourceCollection->metaFromMethod;
+        if ($metaFromMethod) {
+            $meta = $object->$metaFromMethod();
+        }
+
+        return $meta;
     }
 
-    /**
-     * extracted
-     *
-     * @param string $key
-     * @return mixed|null
-     */
-    private function dataValue(string $key): mixed
-    {
-        return array_key_exists($key, $this->data) ? $this->data[$key] : null;
-    }
+
 }
