@@ -2,10 +2,12 @@
 
 namespace spec\App\Domain\Questions;
 
+use App\Domain\Questions\Events\QuestionWasChanged;
 use App\Domain\Questions\Events\QuestionWasPlaced;
 use App\Domain\Questions\Question;
 use App\Domain\RootAggregate;
 use App\Domain\UserManagement\User;
+use Doctrine\Common\Collections\Collection;
 use PhpSpec\ObjectBehavior;
 
 class QuestionSpec extends ObjectBehavior
@@ -77,5 +79,25 @@ class QuestionSpec extends ObjectBehavior
             'archived' => false,
             'closed' => false
         ]);
+    }
+
+    function it_has_a_collection_of_answers()
+    {
+        $this->answers()->shouldBeAnInstanceOf(Collection::class);
+    }
+
+    function it_can_be_changed()
+    {
+        $title = 'new Title';
+        $body = 'new body';
+        $this->releaseEvents();
+        $this->change($title, $body)->shouldBe($this->getWrappedObject());
+
+        $this->title()->shouldBe($title);
+        $this->body()->shouldBe($body);
+
+        $events = $this->releaseEvents();
+        $events->shouldHaveCount(1);
+        $events[0]->shouldBeAnInstanceOf(QuestionWasChanged::class);
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Domain\Questions;
 
+use App\Domain\Questions\Events\QuestionWasChanged;
 use App\Domain\Questions\Events\QuestionWasPlaced;
 use App\Domain\Questions\Question\QuestionId;
 use App\Domain\RootAggregate;
@@ -11,6 +12,8 @@ use App\Infrastructure\JsonApi\SchemaDiscovery\Attributes\AsResourceObject;
 use App\Infrastructure\JsonApi\SchemaDiscovery\Attributes\Attribute;
 use App\Infrastructure\JsonApi\SchemaDiscovery\Attributes\Relationship;
 use App\Infrastructure\JsonApi\SchemaDiscovery\Attributes\ResourceIdentifier;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping\Column;
 use Doctrine\ORM\Mapping\Entity;
 use Doctrine\ORM\Mapping\GeneratedValue;
@@ -43,6 +46,8 @@ class Question implements JsonSerializable, RootAggregate
     #[Attribute(name: "isArchived")]
     private bool $archived = false;
 
+    private ?Collection $answers = null;
+
     public function __construct(
         #[ManyToOne(targetEntity: User::class, fetch: "EAGER")]
         #[JoinColumn(name: "owner_id", onDelete: "CASCADE")]
@@ -60,6 +65,8 @@ class Question implements JsonSerializable, RootAggregate
         private string $body
     ) {
         $this->questionId = new QuestionId();
+        $this->answers = new ArrayCollection();
+
         $this->recordThat(new QuestionWasPlaced(
             $this->owner->userId(),
             $this->questionId,
@@ -131,6 +138,19 @@ class Question implements JsonSerializable, RootAggregate
     }
 
     /**
+     * answers
+     *
+     * @return Collection
+     */
+    public function answers(): Collection
+    {
+        if (!$this->answers) {
+            $this->answers = new ArrayCollection();
+        }
+        return $this->answers;
+    }
+
+    /**
      * @inheritDoc
      */
     public function jsonSerialize(): mixed
@@ -143,5 +163,13 @@ class Question implements JsonSerializable, RootAggregate
             'archived' => $this->archived,
             'closed' => $this->closed
         ];
+    }
+
+    public function change(?string $title = null, ?string $body = null): self
+    {
+        $this->title = $title ?: $this->title;
+        $this->body = $body ?: $this->body;
+        $this->recordThat(new QuestionWasChanged($this->questionId, $this->title, $this->body));
+        return $this;
     }
 }

@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace App\Infrastructure\Persistence\Doctrine\Questions;
 
 use App\Domain\Exception\EntityNotFound;
+use App\Domain\Questions\Events\QuestionWasRemoved;
 use App\Domain\Questions\Question;
 use App\Domain\Questions\Question\QuestionId;
 use App\Domain\Questions\QuestionRepository;
@@ -51,5 +52,15 @@ final class DoctrineQuestionRepository implements QuestionRepository
         }
 
         throw new EntityNotFound("There are no questions with ID '$questionId'");
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function remove(Question $question): Question
+    {
+        $this->entityManager->remove($question);
+        $question->recordThat(new QuestionWasRemoved($question->questionId()));
+        return $question;
     }
 }

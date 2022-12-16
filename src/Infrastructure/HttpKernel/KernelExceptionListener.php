@@ -18,6 +18,7 @@ use Slick\JSONAPI\Object\ErrorObject;
 use Symfony\Component\EventDispatcher\Attribute\AsEventListener;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Event\ExceptionEvent;
+use Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 /**
@@ -51,6 +52,18 @@ final class KernelExceptionListener
                 $exception->getMessage(),
                 null,
                 "404"
+            ));
+            $event->setResponse($this->createResponse($failedValidation));
+            return;
+        }
+
+        if ($exception instanceof MethodNotAllowedHttpException) {
+            $failedValidation = new FailedValidation($exception->getMessage(), 0, $exception);
+            $failedValidation->addError(new ErrorObject(
+                'Method not allowed',
+                $exception->getMessage(),
+                null,
+                "405"
             ));
             $event->setResponse($this->createResponse($failedValidation));
             return;

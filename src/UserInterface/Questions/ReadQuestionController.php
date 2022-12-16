@@ -36,7 +36,7 @@ final class ReadQuestionController extends AbstractController implements Authent
     ) {
     }
 
-    #[Route(path: "/questions/{id}")]
+    #[Route(path: "/questions/{id}", methods: ['GET'])]
     public function read(string $id): Response
     {
         $questionId = new QuestionId($id);

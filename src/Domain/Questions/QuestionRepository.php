@@ -39,4 +39,12 @@ interface QuestionRepository
      * @throws RuntimeException|EntityNotFound
      */
     public function withQuestionId(QuestionId $questionId): Question;
+
+    /**
+     * Removes provided questions from repository
+     *
+     * @param Question $question
+     * @return Question
+     */
+    public function remove(Question $question): Question;
 }

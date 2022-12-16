@@ -61,7 +61,7 @@ abstract class AttributeParser
      */
     public static function parseRelationshipValue(ReflectionProperty $property, object $object): mixed
     {
-        $value = $property->getValue($object);
+         $value = $property->getValue($object);
          if (!is_object($value)) {
              return $value;
          }
